@@ -156,6 +156,16 @@ def make_router(*, profiles, tracker, diary, insights) -> APIRouter:
         name = profiles.get_name(pet_id) or "它"
         return diary.weekly_report(pet_id, name)
 
+    # ---------- 3D 分身（v0.3） ----------
+
+    @router.get("/v1/avatar/{pet_id}/style")
+    async def avatar_style(pet_id: str):
+        """行为权重向量：behavior_log → 桌面 3D 分身动画参数。
+        数据不足返回 {"style": None}，前端落到默认猫性格。"""
+        from pettwin.avatar.style import compute_style_vector
+        vec = compute_style_vector(tracker, pet_id)
+        return {"pet_id": pet_id, "style": vec}
+
     @router.get("/v1/health")
     async def health():
         return {"status": "ok", "dino": profiles.engine.is_available()}

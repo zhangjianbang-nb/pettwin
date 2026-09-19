@@ -78,7 +78,10 @@ class BehaviorTracker:
         if len(vals) < 2:
             return None
         import statistics as st
-        return (st.mean(vals), st.pstdev(vals) or 1e-6, len(vals))
+        std = st.pstdev(vals)
+        # 方差下限: 无波动基线会把 z 放大数万倍; 取均值5%与0.5中的小者做下限
+        std = max(std, st.mean(vals) * 0.10)
+        return (st.mean(vals), std, len(vals))
 
     def anomaly_score(self, pet_id: str, kind: str, window_days: int | None = None,
                       now: float | None = None) -> dict | None:
@@ -96,8 +99,8 @@ class BehaviorTracker:
             return None
         mean, std, n = base
         z = (last["value"] - mean) / std
-        return {"kind": kind, "value": last["value"], "baseline_mean": round(mean),
-                "z": round(z), "anomaly": abs(z) >= s.anomaly_z,
+        return {"kind": kind, "value": last["value"], "baseline_mean": round(mean, 3),
+                "z": round(z, 3), "anomaly": abs(z) >= s.anomaly_z,
                 "n_baseline": n, "ts": last["ts"]}
 
     # ---------- 日节律 ----------

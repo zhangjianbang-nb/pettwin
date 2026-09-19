@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='13'%3E%F0%9F%90%B1%3C/text%3E%3C/svg%3E">
+<title>PetTwin Desktop — 3D 行为分身</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Noto Sans CJK SC", "PingFang SC", system-ui, sans-serif;
+    background: #16141f;
+    color: #e8e4f0;
+    overflow: hidden;
+    height: 100vh;
+  }
+  #stage { position: fixed; inset: 0; }
+  /* 顶部状态条 */
+  #hud {
+    position: fixed; top: 14px; left: 16px; right: 16px;
+    display: flex; align-items: center; gap: 10px;
+    pointer-events: none; z-index: 5;
+  }
+  #petName {
+    font-size: 17px; font-weight: 600; letter-spacing: 0.5px;
+    text-shadow: 0 1px 6px rgba(0,0,0,.6);
+  }
+  #statePill {
+    font-size: 12px; padding: 3px 10px; border-radius: 999px;
+    background: rgba(255,255,255,.10); backdrop-filter: blur(6px);
+  }
+  #connDot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #666; margin-left: auto;
+  }
+  #connDot.live { background: #5ad17c; box-shadow: 0 0 6px #5ad17c; }
+  #connDot.err  { background: #e06c5c; }
+  /* 左下行为向量卡 */
+  #styleCard {
+    position: fixed; left: 16px; bottom: 16px; z-index: 5;
+    background: rgba(22,20,31,.72); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,.08); border-radius: 14px;
+    padding: 12px 14px; width: 230px;
+    font-size: 12px; line-height: 1.5;
+  }
+  #styleCard h3 { font-size: 12px; font-weight: 600; opacity: .8; margin-bottom: 8px; }
+  .row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+  .row .k { width: 52px; opacity: .65; }
+  .bar { flex: 1; height: 5px; border-radius: 3px; background: rgba(255,255,255,.10); position: relative; }
+  .bar > i {
+    position: absolute; inset: 0 auto 0 0; border-radius: 3px;
+    background: linear-gradient(90deg, #7c6cf0, #4ec9b0);
+    transition: width .8s ease;
+  }
+  .row .v { width: 34px; text-align: right; opacity: .85; font-variant-numeric: tabular-nums; }
+  #hint {
+    position: fixed; right: 16px; bottom: 16px; z-index: 5;
+    font-size: 11px; opacity: .45;
+  }
+  #err {
+    position: fixed; inset: 0; display: none; place-items: center;
+    background: #16141f; z-index: 10; text-align: center; padding: 24px;
+  }
+  #err.show { display: grid; }
+  #err code { display: block; margin-top: 10px; font-size: 12px; opacity: .6; }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div id="hud">
+  <span id="petName">PetTwin</span>
+  <span id="statePill">连接中…</span>
+  <span id="connDot"></span>
+</div>
+
+<div id="styleCard">
+  <h3>行为权重向量（实时）</h3>
+  <div class="row"><span class="k">能量</span><div class="bar"><i id="b_energy"></i></div><span class="v" id="v_energy">–</span></div>
+  <div class="row"><span class="k">步频</span><div class="bar"><i id="b_gait"></i></div><span class="v" id="v_gait">–</span></div>
+  <div class="row"><span class="k">尾巴</span><div class="bar"><i id="b_tail"></i></div><span class="v" id="v_tail">–</span></div>
+  <div class="row"><span class="k">情绪</span><div class="bar"><i id="b_mood"></i></div><span class="v" id="v_mood">–</span></div>
+</div>
+
+<div id="hint">PetTwin v0.3 · Behavioral Twin Desktop</div>
+
+<div id="err"><div>
+  <h2>分身加载失败</h2>
+  <code id="errMsg"></code>
+</div></div>
+
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.min.js" } }
+</script>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

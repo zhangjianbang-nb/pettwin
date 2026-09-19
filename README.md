@@ -79,13 +79,36 @@ PetTwin Server (FastAPI)
 (V2) 行为权重向量 → PetRig 3D 桌面分身（参数化四足骨架，已有 cat-rig 原型）
 ```
 
+## 桌面 3D 分身（v0.3）
+
+```bash
+# 1) 起 server
+cd server && uvicorn pettwin.main:app --port 8797
+# 2) 桌面页（任意静态服务指向 desktop/，或直接 file:// 亦需 server 地址参数）
+cd desktop && python3 -m http.server 8798
+# 3) 浏览器打开
+open "http://localhost:8798/?pet=<pet_id>&api=http://localhost:8797&name=橘子&color=orange"
+```
+
+| 参数 | 默认 | 说明 |
+|---|---|---|
+| `pet` | demo | pet_id（无该 id 或无行为数据 → 演示猫性格） |
+| `api` | 同源 | PetTwin server 地址 |
+| `poll` | 30 | 轮询秒数（最小 5） |
+| `name` | pet_id | HUD 显示名 |
+| `color` | orange | orange/black/gray/cow |
+
+风格向量：`GET /v1/avatar/{pet_id}/style` 返回 `energy/gait/tail/bounce/mood/state/anim`——
+近 6h 活动 vs 基线 → 能量与情绪；异常低活动 → 蔫；睡觉/进食日志 → 姿态切换；
+日节律显示"这个钟点它习惯趴着" → 分身也趴。前端逐帧 lerp 平滑跟随，无跳变。
+
 ## Roadmap
 
 - [x] v0.1 — 行为记忆服务端（识别/记忆/统计/洞察/周报）
 - [x] v0.2 — 摄像头接入（活动量自动统计：MOG2 背景减除 + YOLO 可选增强，常驻源 RTSP/USB）
-- [ ] v0.2 — 摄像头接入（宠物检测+活动量自动统计，DeepLabCut 关键点）
-- [ ] v0.3 — 桌面 3D 分身：行为权重向量驱动 PetRig 动画库（Magic Moment：**"卧槽，真的像我家那只"**）
+- [x] v0.3 — 桌面 3D 分身（行为权重向量驱动 PetRig：energy/gait/tail/bounce/mood → 动画混算+程序尾巴，30s 轮询 API）
 - [ ] v0.4 — 叫声语义（meow 分类）+ 多宠社交关系
+- [ ] v0.5 — DeepLabCut 关键点姿势分析（趴键盘/蹭腿等标志动作，Magic Moment 精修）
 
 ## 设计文档
 

@@ -1,5 +1,33 @@
 # Changelog
 
+## [0.3.0] — 2026-09-19
+
+### Added
+- **桌面 3D 分身**（v0.3）：
+  - `GET /v1/avatar/{pet_id}/style`：行为权重向量端点——behavior_log → 3D 动画参数
+  - `server/pettwin/avatar/style.py`：风格向量合成（energy/gait/tail/bounce/mood/state）
+    - 近 6h 活动量 vs 基线 → energy（sqrt 压缩）+ mood
+    - 异常 z-score ≤ -2 → 强制蔫（mood≤0.2, energy≤0.25）
+    - 状态机：sleep/eat/gallop/walk/meow/idle（睡眠窗口 2h + 低活动门槛）
+    - 日节律：该钟点活动占比位于最闲 35% 且分布显著起伏 → 趴下
+  - `desktop/`：桌面分身 web 页（PetRig cat_rig_v3.glb，51 骨骼 / 12 动画）
+    - 三层渲染：模型归一化 + Fur Shell 毛发壳（5 层蒙皮外推）+ 风格向量驱动
+    - 30s 轮询 style 向量，逐帧 lerp 平滑跟随（无跳变）
+    - 尾巴 8 节程序摆动 × mood、耳朵微动、随真实时间变光
+    - URL 参数：pet/api/name/color(orange|black|gray|cow)/poll
+    - `desktop/verify_e2e.cjs`：浏览器验收脚本（模型/动画数/毛发/API/姿态断言）
+
+### Fixed
+- `metrics.py` 残损 token：anomaly dict 里 `abs(z)` 误写为 `round(z)`（行为方向判断反转）
+- 基线方差下限：无波动基线的 z-score 不再放大数万倍（下限=均值 10%）
+- 日节律均匀数据误判"闲时"：分布 max/min>2 才启用
+- 睡眠判定窗口 6h→2h，避免无睡眠日志的蔫猫被误判睡觉
+
+### Notes
+- 测试 10 → 16（风格向量 6 场景：空数据/活跃/蔫/吃饭/睡觉/API 端点）
+- server 新增 CORS 中间件（桌面页可分离部署，只读开放）
+- 端到端验收：headless 浏览器 mock 数据全链路（模型 12 动画 + 5 层毛发 + API live + 蔫猫吃食姿态 + 零 console 错误）
+
 ## [0.2.0] — 2026-09-19
 
 ### Added
@@ -8,15 +36,13 @@
   - `POST /v1/camera/ingest_frame`：App 单帧推流（自管采样节奏）
   - `POST /v1/camera/source` + `DELETE /v1/camera/source/{pet_id}` + `GET /v1/camera/sources`：
     常驻源（RTSP/USB）后台采样线程管理
-- **活动量定义**：MOG2 背景减除运动像素占比（0-100），可跨摄像头比较、可解释、零模型依赖
+- **活动量定义**：MOG2 背景减除 运动像素占比（0-100），可跨摄像头比较、可解释、零模型依赖
 - **YOLO 可选增强**：装 ultralytics 后自动只统计宠物区域（排除人走动误计）
 - 活动量写入 kind=activity source=camera，v0.1 的基线/异常/周报**零改造联动**
 - DeepLabCut 关键点（行为姿势分析）留 v0.3
 
 ### Notes
 - 测试 8 → 10（合成视频 ingest 联动/坏视频 422）
-
-# Changelog
 
 ## [0.1.0] — 2026-09-19
 

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from pettwin.api.camera import CameraHub, make_camera_router
 from pettwin.api.routes import make_router
@@ -16,8 +17,15 @@ from pettwin.perception.pet_profile import PetProfileManager
 
 def create_app() -> FastAPI:
     s = get_settings()
-    app = FastAPI(title="PetTwin", version="0.1.0",
+    app = FastAPI(title="PetTwin", version="0.3.0",
                   description="Behavioral memory twin for real pets")
+    # 桌面分身页可与 server 分离部署, GET 端点开放 CORS（只读, 无 cookie 凭证）
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["GET", "POST", "DELETE"],
+        allow_headers=["*"],
+    )
     store = MemoryStore(s.db_path, embed_dim=s.embed_dim)
     app.state.store = store
 
