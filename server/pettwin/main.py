@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
+from pettwin.api.camera import CameraHub, make_camera_router
 from pettwin.api.routes import make_router
 from pettwin.behavior.metrics import BehaviorTracker
 from pettwin.config import get_settings
@@ -29,6 +30,8 @@ def create_app() -> FastAPI:
 
     app.include_router(make_router(profiles=profiles, tracker=tracker,
                                    diary=diary, insights=insights))
+    app.state.camera_hub = CameraHub(tracker)
+    app.include_router(make_camera_router(app.state.camera_hub))
 
     @app.on_event("shutdown")
     def _close():
