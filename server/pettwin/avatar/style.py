@@ -79,6 +79,58 @@ def compute_style_vector(tracker, pet_id: str, *, now: float | None = None) -> d
         mood = min(mood, 0.2)
         energy = min(energy, 0.25)
 
+    # 姿势覆盖块要用到的量提前算（风格分量稍后统一算）
+    hour = time.localtime(now).tm_hour
+
+    # ---- 姿势覆盖：最近 10 分钟的显著姿势事件优先（v0.5 联动） ----
+    pose_row = tracker.store.conn.execute(
+        "SELECT note, ts FROM behavior_log WHERE pet_id=? AND kind='pose' "
+        "AND ts>=? ORDER BY ts DESC LIMIT 1",
+        (pet_id, now - 600)).fetchone()
+    if pose_row:
+        pose_kind = (pose_row["note"] or "").split(":")[0]
+        if pose_kind == "on_object":
+            # 趴在键盘/物件上——Magic Moment 本体
+            return {
+                "energy": round(energy * 0.6, 3),
+                "gait": 0.85,
+                "tail": _clamp(0.5 + mood * 1.2, 0.0, 2.0),
+                "bounce": 0.4,
+                "mood": _clamp(mood, 0.0, 1.0),
+                "state": "sleep",
+                "anim": "Idle_2_HeadLow",
+                "pose": pose_row["note"],
+                "hour": hour,
+                "version": int(now // 60),
+            }
+        if pose_kind == "jumping":
+            return {
+                "energy": 1.0,
+                "gait": 1.7,
+                "tail": 1.6,
+                "bounce": 1.8,
+                "mood": 0.9,
+                "state": "gallop",
+                "anim": "Gallop",
+                "pose": pose_row["note"],
+                "hour": hour,
+                "version": int(now // 60),
+            }
+        if pose_kind == "stretched":
+            # 伸懒腰 → Jump_ToIdle 一过性
+            return {
+                "energy": _clamp(energy + 0.2, 0.0, 1.0),
+                "gait": 1.1,
+                "tail": _clamp(0.5 + mood * 1.2, 0.0, 2.0),
+                "bounce": 1.0,
+                "mood": _clamp(mood, 0.0, 1.0),
+                "state": "idle",
+                "anim": "Jump_ToIdle",
+                "pose": pose_row["note"],
+                "hour": hour,
+                "version": int(now // 60),
+            }
+
     # ---- 状态机 ----
     sleep_2h = _last_hours(tracker, pet_id, "sleep", 2, now)
     if sleep_2h > 0 and act_1h < base_6h * 0.15:

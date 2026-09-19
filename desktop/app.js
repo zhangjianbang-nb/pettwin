@@ -197,10 +197,14 @@ function hud() {
   document.getElementById("petName").textContent = NAME;
   const dot = document.getElementById("connDot");
   dot.className = apiLive ? "live" : (lastFetchOk ? "" : "err");
-  const st = Object.entries(STATE_PILLS).find(([k]) => target.anim.startsWith(mapAnim(k)));
-  document.getElementById("statePill").textContent = apiLive
-    ? (st ? st[1] : target.anim) + (style.energy < 0.3 ? " · 有点蔫" : "")
-    : "演示模式（未连 API）";
+  let pillText;
+  if (!apiLive) pillText = "演示模式（未连 API）";
+  else if (target.pose) pillText = "🎯 " + target.pose.replace(":", " @ ");
+  else {
+    const st = Object.entries(STATE_PILLS).find(([k]) => target.anim.startsWith(mapAnim(k)));
+    pillText = (st ? st[1] : target.anim) + (style.energy < 0.3 ? " · 有点蔫" : "");
+  }
+  document.getElementById("statePill").textContent = pillText;
   const bars = { energy: 1, gait: 2, tail: 2, mood: 1 };
   for (const k of Object.keys(bars)) {
     document.getElementById("b_" + k).style.width = (target[k] / bars[k] * 100) + "%";
@@ -224,6 +228,7 @@ async function pollStyle() {
       target.energy = v.energy; target.gait = v.gait;
       target.tail = v.tail; target.bounce = v.bounce; target.mood = v.mood;
       target.anim = v.anim || "Idle";
+      target.pose = v.pose || "";
       if (v.version !== lastVersion) {
         lastVersion = v.version;
         setAnim(target.anim);

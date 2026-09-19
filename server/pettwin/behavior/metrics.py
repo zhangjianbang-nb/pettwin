@@ -11,7 +11,7 @@ import time
 from collections import defaultdict
 from dataclasses import dataclass
 
-BEHAVIOR_TYPES = ("activity", "eat", "drink", "sleep", "litter", "meow", "weight")
+BEHAVIOR_TYPES = ("activity", "eat", "drink", "sleep", "litter", "meow", "weight", "pose")
 
 
 class BehaviorTracker:

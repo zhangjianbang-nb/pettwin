@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.5.0] — 2026-09-19
+
+### Added
+- **姿势分析**（v0.5）——Magic Moment 精修：
+  - `perception/pose.py`：bbox 几何序列 → 6 类标志动作
+    lying（趴卧 宽高比≥1.5）/ stretched（伸懒腰 ≥2.2）/ sitting（端坐 0.8-1.3 稳定）/
+    jumping（中心高度 1s 内突变 >1 身高）/ on_object（趴卧+命中标注区）/ moving（位移≥1 身位）
+  - `PoseWatcher`：流式滑窗（2.5s/4 帧）+ 同动作 3 分钟去重
+  - 分层设计：L1 零依赖 bbox 几何（App 框选/固定区/YOLO bbox 均可喂）；L2 预留
+    DeepLabCut/YOLO-pose 关键点（规则引擎不变，精度更高）
+  - `POST /v1/pose/{pet_id}`：bbox 窗口 + zones（keyboard/monitor/bed…）→ 动作事件；
+    同时写 behavior_log(kind=pose) + episodic 事件（自动 observe 标签→回访钩子）
+  - `GET /v1/pose/{pet_id}/recent`：近期动作统计（周报输入）
+- **分身联动**：style 向量姿势覆盖——10 分钟内 on_object → 分身切趴下动画（Idle_2_HeadLow，
+  bounce 降为 0.4）、jumping → Gallop 撒欢、stretched → Jump_ToIdle；桌面页 HUD 显示
+  "🎯 on_object @ keyboard" 徽章
+- BEHAVIOR_TYPES / API kind 校验扩展 pose
+
+### Notes
+- 测试 24 → 35（6 类动作判定/watcher 去重/API/姿势覆盖 3 场景）
+- 端到端：bbox 窗口 → on_object:keyboard 事件 → diary observe 链路 → style 覆盖
+  （state=sleep/anim=Idle_2_HeadLow/pose=on_object:keyboard）→ 桌面页徽章+趴下动画，零 console 错误
+
 ## [0.4.0] — 2026-09-19
 
 ### Added

@@ -108,8 +108,10 @@ open "http://localhost:8798/?pet=<pet_id>&api=http://localhost:8797&name=橘子&
 - [x] v0.2 — 摄像头接入（活动量自动统计：MOG2 背景减除 + YOLO 可选增强，常驻源 RTSP/USB）
 - [x] v0.3 — 桌面 3D 分身（行为权重向量驱动 PetRig：energy/gait/tail/bounce/mood → 动画混算+程序尾巴，30s 轮询 API）
 - [x] v0.4 — 叫声语义（零依赖声学特征+规则分类+每宠基线自学习，异常叫声健康预警）+ 多宠社交（共处陪伴分+互动事件）
-- [ ] v0.5 — DeepLabCut 关键点姿势分析（趴键盘/蹭腿等标志动作，Magic Moment 精修）
-- [ ] v0.5 — DeepLabCut 关键点姿势分析（趴键盘/蹭腿等标志动作，Magic Moment 精修）
+- [x] v0.5 — 姿势分析（bbox 几何 6 类动作 + zones 标注区：**趴键盘 → 桌宠也趴键盘**，DLC 关键点留增强位）
+- [ ] v0.6 — 手机 App（安卓端推帧/推 bbox + 通知）
+- [x] v0.5 — 姿势分析（bbox 几何 6 类动作 + zones 标注区：**趴键盘 → 桌宠也趴键盘**，DLC 关键点留增强位）
+- [ ] v0.6 — 手机 App（安卓端推帧/推 bbox + 通知）
 
 ## 设计文档
 

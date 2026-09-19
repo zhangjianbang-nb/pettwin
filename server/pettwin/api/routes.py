@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import time
 
 import numpy as np
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
@@ -17,7 +18,7 @@ class PetCreate(BaseModel):
 
 class BehaviorIn(BaseModel):
     pet_id: str
-    kind: str = Field(pattern="^(activity|eat|drink|sleep|litter|meow|weight)$")
+    kind: str = Field(pattern="^(activity|eat|drink|sleep|litter|meow|weight|pose)$")
     value: float
     ts: float | None = None
     source: str = "manual"
@@ -35,6 +36,21 @@ class EventIn(BaseModel):
     kind: str = Field(pattern="^(health|diet|behavior|groom|misc)$")
     content: str = Field(min_length=1, max_length=500)
     importance: float = 0.6
+
+
+class PoseBBox(BaseModel):
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+
+
+class PoseWindow(BaseModel):
+    pet_id: str
+    bboxes: list[PoseBBox] = Field(min_length=1)
+    ts: float | None = None
+    zones: dict[str, tuple[float, float, float, float]] | None = None
+    source: str = "camera"
 
 
 class ScheduleIn(BaseModel):
@@ -204,6 +220,42 @@ def make_router(*, profiles, tracker, diary, insights, meows=None, social=None) 
         """陪伴分（0-1）+ 共处分钟 + 近 7 天互动事件。任一方无摄像头数据 → None。"""
         return social.companionship(pet_a, pet_b, days=days) or {
             "pet_a": pet_a, "pet_b": pet_b, "reason": "insufficient camera data"}
+
+    # ---------- 姿势分析（v0.5） ----------
+
+    @router.post("/v1/pose/{pet_id}")
+    async def analyze_pose(pet_id: str, req: PoseWindow):
+        """bbox 窗口（同宠连续 4-6 帧）→ 标志动作判定。
+
+        命中动作时：behavior_log 写 kind='pose'（value=置信度）；
+        显著动作（on_object/jumping/stretched）同时记 episodic 事件（自动 observe 标签）。
+        """
+        from pettwin.perception.pose import BBox, PoseEvent, POSE_KINDS, classify_pose
+        boxes = [BBox(b.x1, b.y1, b.x2, b.y2) for b in req.bboxes]
+        ts0 = req.ts or time.time()
+        stamps = [ts0 + i * 0.5 for i in range(len(boxes))]
+        events = classify_pose(boxes, stamps, zones=req.zones)
+        out = []
+        for e in events:
+            tracker.log(pet_id, "pose", e.confidence, ts=e.ts, source=req.source,
+                        note=f"{e.kind}:{e.zone}" if e.zone else e.kind)
+            if e.kind in ("on_object", "jumping", "stretched"):
+                diary.record_event(pet_id, "behavior",
+                                   f"[pose:{e.kind}] {e.note or e.kind}"
+                                   + (f" @{e.zone}" if e.zone else ""),
+                                   importance=0.65)
+            out.append(e.to_dict())
+        return {"pet_id": pet_id, "events": out}
+
+    @router.get("/v1/pose/{pet_id}/recent")
+    async def recent_poses(pet_id: str, hours: float = 24):
+        """近期姿势事件统计（kind→次数），周报/洞察输入。"""
+        lo = time.time() - hours * 3600
+        rows = tracker.store.conn.execute(
+            "SELECT note, COUNT(*) c FROM behavior_log "
+            "WHERE pet_id=? AND kind='pose' AND ts>=? GROUP BY note ORDER BY c DESC",
+            (pet_id, lo)).fetchall()
+        return {"counts": {r["note"]: r["c"] for r in rows}}
 
     @router.get("/v1/health")
     async def health():

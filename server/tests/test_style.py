@@ -103,3 +103,38 @@ def test_style_via_api(tmp_path):
     _seed(bt, "p1", time.time())
     r2 = client.get("/v1/avatar/p1/style")
     assert r2.json()["style"] is not None
+
+def test_style_pose_override_on_object(tmp_path):
+    """趴键盘姿势事件 → 分身切趴下动画（Magic Moment）。"""
+    s = MemoryStore(tmp_path / "s.db")
+    bt = BehaviorTracker(s)
+    now = time.time()
+    _seed(bt, "p1", now)
+    bt.log("p1", "pose", 0.7, ts=now - 120, source="camera", note="on_object:keyboard")
+    v = compute_style_vector(bt, "p1", now=now)
+    assert v["state"] == "sleep"
+    assert v["anim"] == "Idle_2_HeadLow"
+    assert v["pose"] == "on_object:keyboard"
+
+
+def test_style_pose_override_jumping(tmp_path):
+    s = MemoryStore(tmp_path / "s.db")
+    bt = BehaviorTracker(s)
+    now = time.time()
+    _seed(bt, "p1", now)
+    bt.log("p1", "pose", 0.7, ts=now - 60, source="camera", note="jumping")
+    v = compute_style_vector(bt, "p1", now=now)
+    assert v["state"] == "gallop"
+    assert v["anim"] == "Gallop"
+
+
+def test_style_pose_expired(tmp_path):
+    """姿势事件超过 10 分钟 → 不再覆盖。"""
+    s = MemoryStore(tmp_path / "s.db")
+    bt = BehaviorTracker(s)
+    now = time.time()
+    _seed(bt, "p1", now)
+    bt.log("p1", "pose", 0.7, ts=now - 700, source="camera", note="on_object:keyboard")
+    v = compute_style_vector(bt, "p1", now=now)
+    assert "pose" not in v
+    assert v["state"] in ("walk", "gallop")
