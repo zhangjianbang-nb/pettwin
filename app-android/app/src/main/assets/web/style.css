@@ -1,0 +1,31 @@
+:root { color-scheme: dark; --bg: #16141f; --card: #221f2e; --line: #3a3550; --tx: #e8e4f0; --ac: #7c6cf0; --ac2: #4ec9b0; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Noto Sans CJK SC", system-ui, sans-serif; background: var(--bg); color: var(--tx); height: 100vh; display: flex; flex-direction: column; }
+#topbar { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+#topbar #petName { font-weight: 700; font-size: 16px; }
+#serverUrl { flex: 1; background: var(--card); border: 1px solid var(--line); color: var(--tx); border-radius: 8px; padding: 7px 10px; font-size: 13px; }
+#btnConn { background: var(--ac); border: 0; color: white; border-radius: 8px; padding: 8px 14px; font-weight: 600; }
+#tabs { display: flex; border-bottom: 1px solid var(--line); }
+.tab { flex: 1; padding: 11px 0; background: none; border: 0; color: #9a93b0; font-size: 14px; }
+.tab.on { color: var(--tx); border-bottom: 2px solid var(--ac); font-weight: 600; }
+main { flex: 1; overflow: auto; padding: 14px; }
+.pane { display: none; }
+.pane.on { display: block; }
+.hint { color: #8f88a8; font-size: 12px; line-height: 1.6; }
+video, iframe { width: 100%; border-radius: 12px; background: #000; }
+iframe { height: 60vh; border: 1px solid var(--line); }
+.row { display: flex; gap: 8px; align-items: center; margin: 10px 0; }
+.lbl { font-size: 12px; color: #8f88a8; }
+select, input { background: var(--card); border: 1px solid var(--line); color: var(--tx); border-radius: 8px; padding: 7px 10px; font-size: 13px; }
+button.primary { background: var(--ac); border: 0; color: white; border-radius: 10px; padding: 10px 16px; font-weight: 600; font-size: 14px; }
+button.primary.rec { background: #e06c5c; }
+button.big { width: 100%; padding: 16px; font-size: 16px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin: 8px 0; }
+.card .kind { font-size: 18px; font-weight: 700; color: var(--ac2); }
+.card .note { font-size: 13px; margin: 6px 0; }
+.card .meta { font-size: 11px; color: #8f88a8; }
+.card.mono { font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+h4 { margin: 14px 0 8px; font-size: 14px; color: #b7b0cc; }
+ul { list-style: none; }
+li { background: var(--card); border-radius: 10px; padding: 10px 12px; margin: 6px 0; font-size: 13px; line-height: 1.5; }
+li .t { color: #8f88a8; font-size: 11px; display: block; }

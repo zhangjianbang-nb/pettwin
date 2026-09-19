@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 
 from pettwin.api.camera import CameraHub, make_camera_router
@@ -47,6 +49,11 @@ def create_app() -> FastAPI:
                                    meows=meows, social=social))
     app.state.camera_hub = CameraHub(tracker)
     app.include_router(make_camera_router(app.state.camera_hub))
+
+    # 静态资产：/static/desktop/*（3D 分身页）——App iframe 与远程桌面访问入口
+    desktop_dir = Path(__file__).resolve().parents[2] / "desktop"
+    if desktop_dir.is_dir():
+        app.mount("/static/desktop", StaticFiles(directory=desktop_dir, html=True), name="desktop")
 
     @app.on_event("shutdown")
     def _close():

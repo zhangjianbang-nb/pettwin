@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>PetTwin</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="topbar">
+  <span id="petName">PetTwin</span>
+  <input id="serverUrl" placeholder="http://192.168.3.178:8797" />
+  <button id="btnConn">连接</button>
+</header>
+
+<nav id="tabs">
+  <button class="tab on" data-tab="twin">分身</button>
+  <button class="tab" data-tab="cam">摄像头</button>
+  <button class="tab" data-tab="meow">叫声</button>
+  <button class="tab" data-tab="dash">看板</button>
+</nav>
+
+<main>
+  <!-- 分身：iframe 嵌 server 的 desktop 页 -->
+  <section id="tab-twin" class="pane on">
+    <p class="hint">3D 分身由 server 提供——连接后自动加载。</p>
+    <iframe id="twinFrame" title="3D twin"></iframe>
+  </section>
+
+  <!-- 摄像头：getUserMedia → 定时抓帧推 server -->
+  <section id="tab-cam" class="pane">
+    <video id="camView" playsinline muted></video>
+    <div class="row">
+      <button id="btnCam" class="primary">开启摄像头</button>
+      <select id="camMode">
+        <option value="frame">推帧（活动量）</option>
+        <option value="pose">推 bbox（姿势）</option>
+      <option value="off">停止</option>
+      </select>
+    </div>
+    <div class="row" id="zoneRow" hidden>
+      <span class="lbl">标注区 keyboard (x1,y1,x2,y2)</span>
+      <input id="zoneKb" value="0.30,0.55,0.75,0.95" />
+    </div>
+    <p id="camStatus" class="hint">未开启。推帧模式每 2 秒一帧 → /v1/camera/ingest_frame；bbox 模式每 5 秒 → /v1/pose。</p>
+  </section>
+
+  <!-- 叫声：MediaRecorder → wav → /v1/meow -->
+  <section id="tab-meow" class="pane">
+    <button id="btnRec" class="primary big">🎤 按住录音识别</button>
+    <div id="meowResult" class="card" hidden>
+      <div class="kind"></div><div class="note"></div>
+    <div class="meta"></div>
+    </div>
+    <h4>最近叫声</h4>
+    <ul id="meowList"></ul>
+  </section>
+
+  <!-- 看板：宠物列表 + 洞察 + 风格向量 -->
+  <section id="tab-dash" class="pane">
+    <h4>我的宠物</h4>
+    <ul id="petList"></ul>
+    <h4>最新洞察</h4>
+    <ul id="insightList"></ul>
+    <h4>风格向量</h4>
+    <div id="styleCard" class="card mono">–</div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

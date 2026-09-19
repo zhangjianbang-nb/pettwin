@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.0] — 2026-09-19
+
+### Added
+- **安卓 App**（v0.6）——`app-android/`（WebView 壳 + 内置 mobile 页）：
+  - 四 tab：**分身**（iframe 嵌 `/static/desktop` 3D 页）/ **摄像头**（getUserMedia →
+    推帧模式 2s/帧 multipart 上传 ingest_frame 落 activity，或推 bbox 模式 5s 帧差 bbox → /v1/pose）/
+    **叫声**（按住录音 MediaRecorder → /v1/meow，卡片显示语义+异常标+基频）/ **看板**（宠物列表/洞察/风格向量）
+  - MainActivity：WebView + getUserMedia 权限自动授予 + JS 桥（状态持久化/toast）+ cleartext 局域网
+  - server 地址与 pet 选择持久化；免 APK 升级改 web（assets 页可远程热替）
+- server：`/static/desktop` 静态挂载（App iframe 与远程桌面入口）
+- 修复：`list_pets` 只列"有识别照"宠物——没传照片的宠物在看板不可见（现 fallback 全量 profile）
+
+### Notes
+- 测试 35 passed；端到端（headless fake-camera）：连接→选宠→iframe 分身→推帧 3 条 camera activity 落库，零 console 错误
+- APK 构建一次过（arm64 aapt2 wrapper 配方复用，3.3MB debug 包）；装机验收待设备接入（无线调试/USB）
+
 ## [0.5.0] — 2026-09-19
 
 ### Added

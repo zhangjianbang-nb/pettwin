@@ -102,14 +102,23 @@ class PetProfileManager:
         return self.store.get_profile(pet_id)
 
     def list_pets(self) -> list[dict]:
+        out = []
+        seen = set()
         rows = self.store.conn.execute(
             "SELECT DISTINCT user_id FROM identities WHERE modality='pet_face'").fetchall()
-        out = []
         for r in rows:
             pid = r["user_id"]
             prof = self.store.get_profile(pid)
             if prof:
                 out.append({"pet_id": pid, **prof})
+                seen.add(pid)
+        # 没录识别照的宠物也要可见（App 建宠常常先不传照片）
+        for r in self.store.conn.execute("SELECT DISTINCT user_id FROM profile").fetchall():
+            pid = r["user_id"]
+            if pid not in seen:
+                prof = self.store.get_profile(pid)
+                if prof:
+                    out.append({"pet_id": pid, **prof})
         return out
 
     def forget_pet(self, pet_id: str):

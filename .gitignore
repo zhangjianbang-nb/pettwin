@@ -5,3 +5,6 @@ __pycache__/
 .pytest_cache/
 server/.venv/
 .DS_Store
+app-android/app/build/
+app-android/.gradle/
+app-android/local.properties
