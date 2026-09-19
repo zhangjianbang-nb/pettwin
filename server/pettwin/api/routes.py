@@ -45,7 +45,7 @@ class ScheduleIn(BaseModel):
     repeat_days: int | None = None
 
 
-def make_router(*, profiles, tracker, diary, insights) -> APIRouter:
+def make_router(*, profiles, tracker, diary, insights, meows=None, social=None) -> APIRouter:
     router = APIRouter()
 
     # ---------- 档案 ----------
@@ -165,6 +165,45 @@ def make_router(*, profiles, tracker, diary, insights) -> APIRouter:
         from pettwin.avatar.style import compute_style_vector
         vec = compute_style_vector(tracker, pet_id)
         return {"pet_id": pet_id, "style": vec}
+
+    # ---------- 叫声语义（v0.4） ----------
+
+    @router.post("/v1/meow/{pet_id}")
+    async def analyze_meow(pet_id: str, audio: UploadFile = File(...),
+                           repeats: int = Form(1)):
+        """上传叫声 wav → 声学特征 → 场景语义（hunger/greeting/distress/playful/other）。
+        与自身基线比 z-score，显著异常标 anomalous（健康预警输入）。"""
+        data = await audio.read()
+        try:
+            return meows.analyze(pet_id, data, repeats=repeats)
+        except ValueError as e:
+            raise HTTPException(422, str(e))
+
+    @router.get("/v1/meow/{pet_id}/history")
+    async def meow_history(pet_id: str, limit: int = 20):
+        return {"history": meows.history(pet_id, limit=limit)}
+
+    @router.get("/v1/meow/{pet_id}/counts")
+    async def meow_counts(pet_id: str, days: int = 7):
+        return {"counts": meows.kind_counts(pet_id, days=days)}
+
+    # ---------- 多宠社交（v0.4） ----------
+
+    @router.post("/v1/social/{pet_a}/{pet_b}/interaction")
+    async def add_interaction(pet_a: str, pet_b: str, kind: str = Form(...),
+                              note: str = Form("")):
+        """记录互动事件（play/groom/fight/share_spot/other）。"""
+        try:
+            iid = social.record_interaction(pet_a, pet_b, kind, note=note)
+        except ValueError as e:
+            raise HTTPException(422, str(e))
+        return {"id": iid}
+
+    @router.get("/v1/social/{pet_a}/{pet_b}")
+    async def social_view(pet_a: str, pet_b: str, days: int = 7):
+        """陪伴分（0-1）+ 共处分钟 + 近 7 天互动事件。任一方无摄像头数据 → None。"""
+        return social.companionship(pet_a, pet_b, days=days) or {
+            "pet_a": pet_a, "pet_b": pet_b, "reason": "insufficient camera data"}
 
     @router.get("/v1/health")
     async def health():

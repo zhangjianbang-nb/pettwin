@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pettwin.api.camera import CameraHub, make_camera_router
 from pettwin.api.routes import make_router
 from pettwin.behavior.metrics import BehaviorTracker
+from pettwin.behavior.social import SocialGraph
+from pettwin.perception.meow import MeowEngine
 from pettwin.config import get_settings
 from pettwin.insight.diary import PetDiary
 from pettwin.insight.engine import InsightEngine
@@ -34,10 +36,15 @@ def create_app() -> FastAPI:
     tracker = BehaviorTracker(store)
     diary = PetDiary(store, tracker)
     insights = InsightEngine(store, tracker)
+    meows = MeowEngine(store)
+    social = SocialGraph(store, tracker)
     app.state.profiles = profiles
+    app.state.meows = meows
+    app.state.social = social
 
     app.include_router(make_router(profiles=profiles, tracker=tracker,
-                                   diary=diary, insights=insights))
+                                   diary=diary, insights=insights,
+                                   meows=meows, social=social))
     app.state.camera_hub = CameraHub(tracker)
     app.include_router(make_camera_router(app.state.camera_hub))
 

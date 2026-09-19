@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.4.0] — 2026-09-19
+
+### Added
+- **叫声语义**（v0.4）：
+  - `POST /v1/meow/{pet_id}`：wav 上传 → 声学特征（时长/能量/过零率/基频自相关/频谱质心）→ 场景语义
+    分类：hunger（连叫讨食）/ greeting（打招呼）/ distress（长叫高基频=痛怕）/ playful / other
+  - 零重依赖：numpy + 标准库 wave，无 librosa/torch；合成叫声 4/4 分类全对
+  - **基线自学习**：每宠历史特征库（kv_store），新叫声与自身分布比 z-score ≥2.5 → anomalous
+    （健康预警输入）；样本 <8 不判
+  - `GET /v1/meow/{pet_id}/history` + `/counts`：叫声历史与语义分布（周报输入）
+- **多宠社交**（v0.4）：
+  - `SocialGraph`：60s 槽共处判定（两只都有 camera 活动记录）→ 陪伴分 0-1
+    （共处槽 / min(A活动槽, B活动槽)）+ 共处分钟
+  - 互动事件表 social_interaction（play/groom/fight/share_spot/other，pet 对规范化排序）
+  - `POST /v1/social/{a}/{b}/interaction` + `GET /v1/social/{a}/{b}`
+- `kv_store` 通用 KV 表；`MeowEngine` 门面（分类+基线+历史 100 条）
+
+### Notes
+- 测试 16 → 24（特征/分类/基线异常/历史/陪伴分/互动校验/API 全套）
+- 端到端：真实 HTTP 上传合成 wav → distress + anomalous z=23.3 → 社交陪伴分 1.0 + 2 互动事件
+
 ## [0.3.0] — 2026-09-19
 
 ### Added

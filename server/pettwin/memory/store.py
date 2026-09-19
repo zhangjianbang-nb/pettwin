@@ -151,6 +151,11 @@ CREATE TABLE IF NOT EXISTS insights (
     created_at REAL NOT NULL,
     source_event_count INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS kv_store (
+    key TEXT PRIMARY KEY,
+    data TEXT NOT NULL
+);
 """
 
 
